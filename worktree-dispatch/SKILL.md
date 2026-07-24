@@ -27,15 +27,15 @@ description: Dispatch a scoped implementation task to an isolated herdr worktree
    git -C <repo root> fetch origin
    herdr worktree create --cwd <repo root> --branch <branch> --base origin/main --label "<label>" --no-focus --json
    ```
+   `<branch>` はトラッカーが発行するブランチ名（Linearなら issue の `gitBranchName`）をそのまま使う。issue識別子（例: `kle-416`）が含まれていればトラッカーがブランチ/PRを自動リンクする。
    作成後、worktree の `git log --oneline -1` が origin/main の先端コミットと一致することを確認してから投入する。ブロッカーissueのマージ直後は特に注意——そのマージが基点に含まれていなければ意味がない。
 
-4. **投入する**: 新しいworktreeのroot paneでエージェントを起動し、そのプロジェクトの実装コマンド（例: `/implement`）またはタスクの説明をそのまま渡す。`claude`を素で起動するとherdr経由ではユーザーのデフォルトモデル設定が反映されないことがあるため、`--model`で明示的に指定する（省略しない）:
+4. **投入する**: 新しいworktreeのroot paneでエージェントを起動し、そのプロジェクトの実装コマンド（例: `/implement`）またはタスクの説明をそのまま渡す。モデルは **sonnet 固定**——コーディネーター自身がどのモデルで動いていても、投入先は sonnet。例外は手順1のプロジェクト固有フローまたはユーザーが別モデルを明示指定した場合のみ。herdr経由の`claude`はユーザーのデフォルトモデル設定が反映されないことがあるため、`--model`は常に付ける:
    ```
    herdr pane run <root_pane_id> "claude --model sonnet '<command-or-prompt>'"
    ```
-   どのモデルを使うべきか不明な場合は、コーディネーター自身が使っているモデルに合わせる。
 
-5. **発火確認して手放す**: `herdr pane read <root_pane_id>` で正しいタスクに着手したことだけ確認する。完了まで同期的に待たない——PR作成以降のステータス更新（In Review等）は、そのプロジェクトの規約に従って投入先のエージェントが担う。
+5. **発火確認して手放す**: `herdr pane read <root_pane_id>` で正しいタスクに着手したことだけ確認する。初回起動はフォルダ信頼確認などのダイアログで止まりがち——止まっていたら `herdr pane send-keys` で通し、着手を見届けてから手放す。完了まで同期的に待たない——PR作成以降のステータス更新（In Review等）は、そのプロジェクトの規約に従って投入先のエージェントが担う。
 
 6. **issueを In Progress にする**: 着手確認できたら、対応するissueのステータスをトラッカー上の「作業中」（Linear なら In Progress）に更新する。投入先エージェント任せにしない——エージェントによっては更新しないまま実装を進めるため、dispatch した側が worktree 作成の時点で確実に反映する。
 
